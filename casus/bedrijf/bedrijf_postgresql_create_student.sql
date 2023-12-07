@@ -4,7 +4,7 @@
 -- Dit is een verkorte overname uit:
 -- Lex de Haan (2004) Leerboek Oracle SQL (Derde editie, Academic Service)
 --
--- Hogeschool Utrecht
+-- Hogeschool Utrechth
 -- Tijmen Muller (tijmen.muller@hu.nl)
 -- ------------------------------------------------------------------------
 
