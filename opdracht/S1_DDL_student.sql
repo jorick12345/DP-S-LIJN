@@ -34,6 +34,8 @@
 -- die ervoor zorgt dat alleen 'M' of 'V' als geldige waarde wordt
 -- geaccepteerd. Test deze regel en neem de gegooide foutmelding op als
 -- commentaar in de uitwerking.
+ALTER TABLE medewerkers ADD column geslacht char(1);
+ALTER TABLE medewerkers add constraint m_geslacht_chk CHECK (geslacht IN ('M','V'));
 
 
 -- S1.2. Nieuwe afdeling
@@ -43,6 +45,11 @@
 -- nieuwe medewerker A DONK aangenomen. Hij krijgt medewerkersnummer 8000
 -- en valt direct onder de directeur.
 -- Voeg de nieuwe afdeling en de nieuwe medewerker toe aan de database.
+INSERT INTO medewerkers values(8000,'DONK','A','ASSISTENT',7839,'1999-10-10',1000,null,20,'M') ON CONFLICT DO NOTHING;
+INSERT INTO afdelingen values(50,'ONDERZOEK','ZWOLLE',8000) ON CONFLICT DO NOTHING;
+
+UPDATE medewerkers SET afd = 50 WHERE functie ='ONDERZOEK';
+
 
 
 -- S1.3. Verbetering op afdelingentabel
@@ -50,10 +57,19 @@
 -- We gaan een aantal verbeteringen doorvoeren aan de tabel `afdelingen`:
 --   a) Maak een sequence die afdelingsnummers genereert. Denk aan de beperking
 --      dat afdelingsnummers veelvouden van 10 zijn.
+-- create sequence rid_seq START WITH 10 INCREMENT BY 10;
+-- alter table afdelingen add column rid integer default nextval('rid_seq');
 --   b) Voeg een aantal afdelingen toe aan de tabel, maak daarbij gebruik van
 --      de nieuwe sequence.
+INSERT INTO afdelingen values(50,'ONDERZOEK5','ZWOLLE',7369) ON CONFLICT DO NOTHING;
 --   c) Op enig moment gaat het mis. De betreffende kolommen zijn te klein voor
 --      nummers van 3 cijfers. Los dit probleem op.
+ALTER SEQUENCE rid_seq MAXVALUE 1000;
+ALTER TABLE historie ALTER COLUMN afd TYPE numeric(3);
+ALTER TABLE medewerkers ALTER COLUMN afd TYPE numeric(3);
+ALTER TABLE afdelingen ALTER COLUMN anr TYPE numeric(3);
+-- de test van S9 zorgde ervoor dat de afd niet aangepast mocht worden
+
 
 
 -- S1.4. Adressen
@@ -68,6 +84,13 @@
 --    einddatum     moet na de ingangsdatum liggen
 --    telefoon      10 cijfers, uniek
 --    med_mnr       FK, verplicht
+CREATE TABLE adressen(postcode char(6), huisnummer varchar(255), ingangsdatum date, einddatum date,
+                      telefoon numeric(10) UNIQUE, med_mnr numeric(255) NOT NULL,
+                      CONSTRAINT adress_primary_key PRIMARY KEY(postcode, huisnummer, ingangsdatum),
+                      FOREIGN KEY(med_mnr) REFERENCES medewerkers(mnr), CONSTRAINT datum_eind CHECK(ingangsdatum<einddatum));
+
+INSERT into adressen (postcode,huisnummer,ingangsdatum,einddatum,telefoon,med_mnr)
+values('2233FB', 10, '2000-11-23','2000-12-24',0677889900,8000) ON CONFLICT DO NOTHING;
 
 
 -- S1.5. Commissie
@@ -76,11 +99,17 @@
 -- 'VERKOPER' heeft, anders moet de commissie NULL zijn. Schrijf hiervoor een beperkingsregel. Gebruik onderstaande
 -- 'illegale' INSERTs om je beperkingsregel te controleren.
 
-INSERT INTO medewerkers (mnr, naam, voorl, functie, chef, gbdatum, maandsal, comm)
-VALUES (8001, 'MULLER', 'TJ', 'TRAINER', 7566, '1982-08-18', 2000, 500);
+ALTER TABLE medewerkers ADD CONSTRAINT key_primary CHECK (
+        (functie = 'VERKOPER' AND comm IS NOT NULL) OR
+        (functie != 'VERKOPER' AND comm IS NULL)
+    );
 
-INSERT INTO medewerkers (mnr, naam, voorl, functie, chef, gbdatum, maandsal, comm)
-VALUES (8002, 'JANSEN', 'M', 'VERKOPER', 7698, '1981-07-17', 1000, NULL);
+
+-- INSERT INTO medewerkers (mnr, naam, voorl, functie, chef, gbdatum, maandsal, comm)
+-- VALUES (8001, 'MULLER', 'TJ', 'TRAINER', 7566, '1982-08-18', 2000, 500);
+--
+-- INSERT INTO medewerkers (mnr, naam, voorl, functie, chef, gbdatum, maandsal, comm)
+-- VALUES (8002, 'JANSEN', 'M', 'VERKOPER', 7698, '1981-07-17', 1000, NULL);
 
 
 
