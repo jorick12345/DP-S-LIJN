@@ -30,35 +30,36 @@
 -- S2.1. Vier-daagse cursussen
 --
 -- Geef code en omschrijving van alle cursussen die precies vier dagen duren.
--- DROP VIEW IF EXISTS s2_1; CREATE OR REPLACE VIEW s2_1 AS                                                     -- [TEST]
-
+ DROP VIEW IF EXISTS s2_1; CREATE OR REPLACE VIEW s2_1 AS                                                     -- [TEST]
+ select code,omschrijving from cursussen where lengte = 4;
 
 -- S2.2. Medewerkersoverzicht
 --
 -- Geef alle informatie van alle medewerkers, gesorteerd op functie,
 -- en per functie op leeftijd (van jong naar oud).
--- DROP VIEW IF EXISTS s2_2; CREATE OR REPLACE VIEW s2_2 AS                                                     -- [TEST]
+ DROP VIEW IF EXISTS s2_2; CREATE OR REPLACE VIEW s2_2 AS
+ select * from medewerkers order by functie asc, gbdatum desc;                                               -- [TEST]
 
 
 -- S2.3. Door het land
 --
 -- Welke cursussen zijn in Utrecht en/of in Maastricht uitgevoerd? Geef
 -- code en begindatum.
--- DROP VIEW IF EXISTS s2_3; CREATE OR REPLACE VIEW s2_3 AS                                                     -- [TEST]
-
+DROP VIEW IF EXISTS s2_3; CREATE OR REPLACE VIEW s2_3 AS                                                       -- [TEST]
+select cursus,begindatum from uitvoeringen where locatie = 'UTRECHT' OR locatie = 'MAASTRICHT';
 
 -- S2.4. Namen
 --
 -- Geef de naam en voorletters van alle medewerkers, behalve van R. Jansen.
--- DROP VIEW IF EXISTS s2_4; CREATE OR REPLACE VIEW s2_4 AS                                                     -- [TEST]
-
+DROP VIEW IF EXISTS s2_4; CREATE OR REPLACE VIEW s2_4 AS                                                     -- [TEST]
+select naam,voorl from medewerkers WHERE NOT (naam = 'JANSEN' and voorl = 'R');
 
 -- S2.5. Nieuwe SQL-cursus
 --
 -- Er wordt een nieuwe uitvoering gepland voor cursus S02, en wel op de
 -- komende 2 maart. De cursus wordt gegeven in Leerdam door Nick Smit.
 -- Voeg deze gegevens toe.
-INSERT
+INSERT into uitvoeringen(cursus,begindatum,docent,locatie) values ('S02','2023-03-02',7369,'LEERDAM')
 ON CONFLICT DO NOTHING;                                                                                         -- [TEST]
 
 
@@ -66,7 +67,8 @@ ON CONFLICT DO NOTHING;                                                         
 --
 -- Neem één van je collega-studenten aan als stagiair ('STAGIAIR') en
 -- voer zijn of haar gegevens in. Kies een personeelnummer boven de 8000.
-INSERT
+INSERT into medewerkers(mnr,naam,voorl,functie,chef,gbdatum,maandsal,comm,afd)
+values(8001,'Have','H','STAGIAIR',7566,'1999-07-15',1500,null,40)
 ON CONFLICT DO NOTHING;                                                                                         -- [TEST]
 
 
@@ -74,7 +76,7 @@ ON CONFLICT DO NOTHING;                                                         
 --
 -- We breiden het salarissysteem uit naar zes schalen. Voer een extra schaal in voor mensen die
 -- tussen de 3001 en 4000 euro verdienen. Zij krijgen een toelage van 500 euro.
-INSERT
+INSERT into schalen(snr,ondergrens,bovengrens,toelage) values(6,3001,4000,500)
 ON CONFLICT DO NOTHING;                                                                                         -- [TEST]
 
 
@@ -83,17 +85,17 @@ ON CONFLICT DO NOTHING;                                                         
 -- Er wordt een nieuwe 6-daagse cursus 'Data & Persistency' in het programma opgenomen.
 -- Voeg deze cursus met code 'D&P' toe, maak twee uitvoeringen in Leerdam en schrijf drie
 -- mensen in.
-INSERT
+INSERT into cursussen(code,omschrijving,type,lengte) values('D&P','Data & Persistency','ALG',6)
 ON CONFLICT DO NOTHING;                                                                                         -- [TEST]
-INSERT
+INSERT into uitvoeringen(cursus,begindatum,docent,locatie) values('D&P','2022-12-06',7369,'LEERDAM')
 ON CONFLICT DO NOTHING;                                                                                         -- [TEST]
-INSERT
+INSERT into uitvoeringen(cursus,begindatum,docent,locatie) values('D&P','2022-10-10',7369,'LEERDAM')
 ON CONFLICT DO NOTHING;                                                                                         -- [TEST]
-INSERT
+INSERT into inschrijvingen(cursist,cursus,begindatum,evaluatie) values(7499,'D&P','2022-12-06',5)
 ON CONFLICT DO NOTHING;                                                                                         -- [TEST]
-INSERT
+INSERT into inschrijvingen(cursist,cursus,begindatum,evaluatie) values(8001,'D&P','2022-12-06',5)
 ON CONFLICT DO NOTHING;                                                                                         -- [TEST]
-INSERT
+INSERT into inschrijvingen(cursist,cursus,begindatum,evaluatie) values(7900,'D&P','2022-10-10',5)
 ON CONFLICT DO NOTHING;                                                                                         -- [TEST]
 
 
@@ -102,15 +104,21 @@ ON CONFLICT DO NOTHING;                                                         
 -- De medewerkers van de afdeling VERKOOP krijgen een salarisverhoging
 -- van 5.5%, behalve de manager van de afdeling, deze krijgt namelijk meer: 7%.
 -- Voer deze verhogingen door.
+update medewerkers set maandsal = maandsal * 1.055 where afd = 30 and functie != 'MANAGER';
+update medewerkers set maandsal = maandsal * 1.07 where afd = 30 and functie = 'MANAGER';
 
 
 -- S2.10. Concurrent
 --
 -- Martens heeft als verkoper succes en wordt door de concurrent
 -- weggekocht. Verwijder zijn gegevens.
+delete from medewerkers where naam='MARTENS';
 
 -- Zijn collega Alders heeft ook plannen om te vertrekken. Verwijder ook zijn gegevens.
 -- Waarom lukt dit (niet)?
+--ALDERS kan niet verwijderd worden omdat de tabel inschrijvingen met een foreign key naar hem verwijst en deze
+--kan niet naar een niet bestaande colom verwijzen
+
 
 
 -- S2.11. Nieuwe afdeling
@@ -118,10 +126,11 @@ ON CONFLICT DO NOTHING;                                                         
 -- Je wordt hoofd van de nieuwe afdeling 'FINANCIEN' te Leerdam,
 -- onder de hoede van De Koning. Kies een personeelnummer boven de 8000.
 -- Zorg voor de juiste invoer van deze gegevens.
-INSERT
+INSERT into afdelingen(anr,naam,locatie,hoofd) values(60,'FINANCIEN','DEN HAAG',8001)
 ON CONFLICT DO NOTHING;                                                                                         -- [TEST]
 
-INSERT
+INSERT into medewerkers(mnr,naam,voorl,functie,chef,gbdatum,maandsal,comm,afd)
+values(8002,'HAVE','J','ADVISEUR',7839,'2000-11-10',6000.00,null,60)
 ON CONFLICT DO NOTHING;                                                                                         -- [TEST]
 
 
