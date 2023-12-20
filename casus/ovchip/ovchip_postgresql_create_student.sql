@@ -7,7 +7,7 @@
 
 -- Creëer tabellen, primaire sleutels en foreign keys
 
-CREATE TABLE reiziger
+CREATE TABLE REIZIGER
 (
     reiziger_id   NUMERIC(10)  NOT NULL,
     voorletters   VARCHAR(10)  NOT NULL,
@@ -17,7 +17,7 @@ CREATE TABLE reiziger
     PRIMARY KEY (reiziger_id)
 );
 
-CREATE TABLE adres
+CREATE TABLE ADRES
 (
     adres_id    NUMERIC(10)  NOT NULL,
     postcode    VARCHAR(10)  NOT NULL,
@@ -29,10 +29,10 @@ CREATE TABLE adres
 	UNIQUE (reiziger_id)
 );
 
-ALTER TABLE adres
+ALTER TABLE ADRES
 ADD CONSTRAINT adres_reiziger_unique UNIQUE (reiziger_id);
 
-CREATE TABLE ov_chipkaart
+CREATE TABLE OV_CHIPKAART
 (
     kaart_nummer NUMERIC(10)    NOT NULL,
     geldig_tot   DATE           NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE ov_chipkaart
     PRIMARY KEY (kaart_nummer)
 );
 
-CREATE TABLE product
+CREATE TABLE PRODUCT
 (
     product_nummer NUMERIC(10)    NOT NULL,
     naam           VARCHAR(30)    NOT NULL,
@@ -52,7 +52,7 @@ CREATE TABLE product
 );
 
 
-CREATE TABLE ov_chipkaart_product
+CREATE TABLE OV_CHIPKAART_PRODUCT
 (
     kaart_nummer   NUMERIC(10) NOT NULL REFERENCES ov_chipkaart (kaart_nummer),
     product_nummer NUMERIC(10) NOT NULL REFERENCES product (product_nummer),
